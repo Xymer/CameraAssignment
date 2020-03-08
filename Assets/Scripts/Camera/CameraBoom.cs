@@ -133,8 +133,8 @@ public class CameraBoom : MonoBehaviour
         mouseAxisY = Mathf.Clamp(mouseAxisY, mouseAxisYMin, mouseAxisYMax);
         Quaternion rotation = Quaternion.Euler(mouseMovement.y + target.transform.rotation.eulerAngles.x, mouseMovement.x + target.transform.rotation.eulerAngles.y, 0.0f);
 
-        transform.rotation = Quaternion.Slerp(transform.rotation, rotation, lerpMultiplier * Time.deltaTime);
         camera.transform.LookAt(endPosition);
+        transform.rotation = Quaternion.Slerp(transform.rotation, rotation, lerpMultiplier * Time.deltaTime);
         isReturning = true;
     }
     void SetCameraBoomLength()
