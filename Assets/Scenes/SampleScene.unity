@@ -353,6 +353,11 @@ PrefabInstance:
       propertyPath: mouseAxisYMin
       value: -10
       objectReference: {fileID: 0}
+    - target: {fileID: 5840276985571127408, guid: 73f313d53b3c2284981ac8c7543cabca,
+        type: 3}
+      propertyPath: scrollWheelMultiplier
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 5840276985571127409, guid: 73f313d53b3c2284981ac8c7543cabca,
         type: 3}
       propertyPath: m_Name
@@ -588,6 +593,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 6891226653460185223, guid: 7930b1345cd51f94f92ca4d8bfcb1bbe,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 6891226653460185226, guid: 7930b1345cd51f94f92ca4d8bfcb1bbe,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -596,7 +606,7 @@ PrefabInstance:
     - target: {fileID: 6891226653460185226, guid: 7930b1345cd51f94f92ca4d8bfcb1bbe,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -7.05
       objectReference: {fileID: 0}
     - target: {fileID: 6891226653460185226, guid: 7930b1345cd51f94f92ca4d8bfcb1bbe,
         type: 3}
