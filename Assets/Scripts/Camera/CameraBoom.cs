@@ -16,7 +16,8 @@ public class CameraBoom : MonoBehaviour
     [SerializeField] float boomSmoothening = 0.75f;
 
     [SerializeField] float lerpMultiplier = 50.0f;
-    [SerializeField] float cameraReturnSmoothening = 0.05f;
+    [SerializeField, Range(0f,1f)] float cameraReturnSmoothening = 0.05f;
+    [SerializeField, Range(0f, 1f)] float movementLerpSmoothening = 0.5f;
 
     [SerializeField] float mouseAxisYMax = 45.0f;
     [SerializeField] float mouseAxisYMin = -10.0f;
@@ -82,8 +83,7 @@ public class CameraBoom : MonoBehaviour
             UpdateEndPosition(cameraTarget);
             SetCameraPosition(cameraTarget);
             RotateCameraBoom(cameraTarget);
-            LerpMouseAxisBackToZero();
-            
+            LerpMouseAxisBackToZero();        
         }
 
         if (GetRightMouseInput())
@@ -106,7 +106,7 @@ public class CameraBoom : MonoBehaviour
     }
     void UpdateEndPosition(GameObject target)
     {
-        endPosition = target.transform.position + cameraBoomOffset;
+        endPosition = Vector3.Lerp(endPosition,target.transform.position + cameraBoomOffset + mouseOffset,Time.deltaTime * lerpMultiplier * movementLerpSmoothening);
     }
     void SetCameraPosition(GameObject target)
     {
@@ -123,13 +123,12 @@ public class CameraBoom : MonoBehaviour
         {
             mouseAxisYValue -= Input.GetAxis(mouseAxisY);
             mouseAxisXValue += Input.GetAxis(mouseAxisX);
-            Quaternion rotation =Quaternion.Euler(Mathf.Clamp(mouseAxisYValue + target.transform.rotation.eulerAngles.x,mouseAxisYMin,mouseAxisYMax), target.transform.rotation.eulerAngles.y, 0f);
-            mouseOffset.x = Mathf.Clamp(mouseAxisXValue * cameraReturnSmoothening,-1f,1f);
-            transform.rotation = rotation;
-            mouseOffset = transform.rotation * mouseOffset;
+            Quaternion rotation =Quaternion.Euler(Mathf.Clamp(mouseAxisYValue + target.transform.rotation.eulerAngles.x,mouseAxisYMin,mouseAxisYMax), target.transform.rotation.eulerAngles.y, 0f);         
+            transform.rotation = rotation;      
         }
         else if (isReturning)
         {
+            
             transform.rotation = Quaternion.Lerp(transform.rotation, target.transform.rotation, Time.deltaTime * lerpMultiplier * cameraReturnSmoothening);
         }
         camera.transform.LookAt(endPosition);

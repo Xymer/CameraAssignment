@@ -451,6 +451,11 @@ PrefabInstance:
       propertyPath: scrollWheelMultiplier
       value: 100
       objectReference: {fileID: 0}
+    - target: {fileID: 5840276985571127408, guid: 73f313d53b3c2284981ac8c7543cabca,
+        type: 3}
+      propertyPath: movementLerpSmoothening
+      value: 0.2
+      objectReference: {fileID: 0}
     - target: {fileID: 5840276985571127409, guid: 73f313d53b3c2284981ac8c7543cabca,
         type: 3}
       propertyPath: m_Name

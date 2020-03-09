@@ -4,12 +4,14 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
+    private const string horizontalInput = "Horizontal";
+    private const string verticalInput = "Vertical";
     [Header("Movement"), SerializeField]
     float moveSpeed = 1.0f;
     [SerializeField]
     float turnRate = 1.0f;
-    float horizontalInput;
-    float verticalInput;
+    float horizontalMovement;
+    float verticalMovement;
     float playerYRotation;
 
     Vector3 movementVector = Vector3.zero;
@@ -32,17 +34,13 @@ public class PlayerMovement : MonoBehaviour
     bool GetInput()
     {
         if (Input.anyKey)
-        {
-            if (Input.GetAxis("Horizontal") != 0)
-            {
-                horizontalInput = Input.GetAxis("Horizontal");
-                movementVector.x = horizontalInput;
-            }
-            if (Input.GetAxis("Vertical") != 0)
-            {
-                verticalInput = Input.GetAxis("Vertical");
-                movementVector.z = verticalInput;
-            }
+        {            
+                horizontalMovement = Input.GetAxis(horizontalInput);
+                movementVector.x = horizontalMovement;
+                      
+                verticalMovement = Input.GetAxis(verticalInput);
+                movementVector.z = verticalMovement;
+            
             return true;
         }
         movementVector = Vector3.zero;
@@ -57,7 +55,7 @@ public class PlayerMovement : MonoBehaviour
             transform.rotation = Quaternion.Euler(0, playerYRotation , 0);
             return true;
         }
-     
+        playerYRotation = 0f + transform.rotation.eulerAngles.y;
         return false;
     }
 }
