@@ -24,27 +24,10 @@ public class PlayerMovement : MonoBehaviour
     {
         if (GetInput())
         {
-            if (Input.GetAxis("Vertical") < 0)
-            {
-            transform.position += movementVector.magnitude * -transform.forward;
-            }
-            if (Input.GetAxis("Vertical") > 0)
-            {
-            transform.position += movementVector.magnitude * transform.forward;
-            }
-            if (Input.GetAxis("Horizontal") > 0)
-            {
-                transform.position += movementVector.magnitude * transform.right;
-            }
-            if (Input.GetAxis("Horizontal") < 0)
-            {
-                transform.position += movementVector.magnitude * -transform.right;
-            }
+            transform.Translate(movementVector.normalized * Time.deltaTime * moveSpeed);
         }
-        if (GetMouseMovement())
-        {
+        GetMouseMovement();
 
-        }
     }
     bool GetInput()
     {
@@ -53,12 +36,12 @@ public class PlayerMovement : MonoBehaviour
             if (Input.GetAxis("Horizontal") != 0)
             {
                 horizontalInput = Input.GetAxis("Horizontal");
-                movementVector.x = horizontalInput * Time.deltaTime * moveSpeed;
+                movementVector.x = horizontalInput;
             }
             if (Input.GetAxis("Vertical") != 0)
             {
                 verticalInput = Input.GetAxis("Vertical");
-                movementVector.z = verticalInput * Time.deltaTime * moveSpeed;
+                movementVector.z = verticalInput;
             }
             return true;
         }

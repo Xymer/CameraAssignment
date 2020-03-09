@@ -4,7 +4,10 @@ using UnityEngine;
 
 public class CameraBoom : MonoBehaviour
 {
-    
+    private const string mouseAxisX = "Mouse X";
+    private const string mouseAxisY = "Mouse Y";
+    private const string scrollWheel = "Mouse ScrollWheel";
+
 
     [Header("Camera boom settings"), SerializeField]
     float cameraBoomLength = 10.0f;
@@ -18,6 +21,9 @@ public class CameraBoom : MonoBehaviour
     [SerializeField] float mouseAxisYMax = 45.0f;
     [SerializeField] float mouseAxisYMin = -10.0f;
 
+    float mouseAxisYValue = 0f;
+    float mouseAxisXValue = 0f;
+
     float targetBoomLength = 10f;
     float cameraSphereRadius = 1f;
     float distanceToLockCamera = 1.0f;
@@ -26,53 +32,58 @@ public class CameraBoom : MonoBehaviour
 
     [SerializeField] Vector3 cameraBoomOffset = Vector3.zero;
     [SerializeField] Vector3 cameraOffset = Vector3.zero;
-
-    [Header("Scroll"), SerializeField]
+    Vector3 mouseOffset = Vector3.zero;
+    Vector3 linetraceHitpoint;
+    [Header("Mouse Settings"), SerializeField]
     float scrollWheelMultiplier = 10.0f;
 
     [SerializeField] float mouseMultiplier = 10.0f;
     private float scrollWheelInput = 0.0f;
 
-    float mouseAxisX = 0;
-    float mouseAxisY = 0;
+    float freeCameraAxisXValue = 0;
+    float freeCameraAxisYValue = 0;
 
 
 
     Vector3 endPosition;
-    Camera camera = null;
+    Camera camera = default;
     [SerializeField]
     GameObject cameraTarget;
     void Start()
     {
         camera = GetComponentInChildren<Camera>();
-        camera.transform.position = cameraBoomOffset;
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         targetBoomLength = cameraBoomLength;
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
-        if (LinecastToTarget())
+        Debug.Log("Target length: " + targetBoomLength);
+        if (LinecastFromTargetToCamera(ref linetraceHitpoint))
         {
-            OverrideCameraBoomLength(Vector3.Distance(RaycastFromTargetToCamera(), endPosition));
-        }
-        else if (!LinecastToTarget())
-        {
-            ReturnToTargetBoomLength();
+        OverrideCameraBoomLength(Vector3.Distance(endPosition, linetraceHitpoint));
         }
 
+        else
+        {
+        ReturnToTargetBoomLength();
+        }
+        
         if (GetScrollInput() != 0)
         {
             SetCameraBoomLength();
         }
+
         if (!GetRightMouseInput())
         {
             UpdateEndPosition(cameraTarget);
             SetCameraPosition(cameraTarget);
             RotateCameraBoom(cameraTarget);
             LerpMouseAxisBackToZero();
+            
         }
 
         if (GetRightMouseInput())
@@ -80,17 +91,12 @@ public class CameraBoom : MonoBehaviour
             UpdateEndPosition(cameraTarget);
             SetFreeCameraPosition(cameraTarget);
         }
-
     }
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(endPosition, 1.0f);
         SetupCameraSphere(camera.transform.position, cameraSphereRadius);
-        if (LinecastToTarget())
-        {
-            Gizmos.DrawCube(RaycastFromTargetToCamera(), Vector3.one);
-        }
     }
 
     void SetupCameraSphere(Vector3 cameraPosition, float radius)
@@ -115,7 +121,12 @@ public class CameraBoom : MonoBehaviour
         }
         if (!isReturning)
         {
-            transform.rotation = target.transform.rotation;
+            mouseAxisYValue -= Input.GetAxis(mouseAxisY);
+            mouseAxisXValue += Input.GetAxis(mouseAxisX);
+            Quaternion rotation =Quaternion.Euler(Mathf.Clamp(mouseAxisYValue + target.transform.rotation.eulerAngles.x,mouseAxisYMin,mouseAxisYMax), target.transform.rotation.eulerAngles.y, 0f);
+            mouseOffset.x = Mathf.Clamp(mouseAxisXValue * cameraReturnSmoothening,-1f,1f);
+            transform.rotation = rotation;
+            mouseOffset = transform.rotation * mouseOffset;
         }
         else if (isReturning)
         {
@@ -126,13 +137,12 @@ public class CameraBoom : MonoBehaviour
     void SetFreeCameraPosition(GameObject target)
     {
         SetCameraPosition(target);
-        Vector3 mouseMovement = new Vector3(mouseAxisX, Mathf.Clamp(mouseAxisY, mouseAxisYMin, mouseAxisYMax), 0);
-        mouseAxisX += Input.GetAxis("Mouse X") * mouseMultiplier;
-        mouseAxisY -= Input.GetAxis("Mouse Y") * mouseMultiplier;
+        Vector3 mouseMovement = new Vector3(freeCameraAxisXValue, Mathf.Clamp(freeCameraAxisYValue, mouseAxisYMin, mouseAxisYMax), 0);
+        freeCameraAxisXValue += Input.GetAxis(mouseAxisX) * mouseMultiplier;
+        freeCameraAxisYValue -= Input.GetAxis(mouseAxisY) * mouseMultiplier;
+        freeCameraAxisYValue = Mathf.Clamp(freeCameraAxisYValue, mouseAxisYMin, mouseAxisYMax);
 
-        mouseAxisY = Mathf.Clamp(mouseAxisY, mouseAxisYMin, mouseAxisYMax);
         Quaternion rotation = Quaternion.Euler(mouseMovement.y + target.transform.rotation.eulerAngles.x, mouseMovement.x + target.transform.rotation.eulerAngles.y, 0.0f);
-
         camera.transform.LookAt(endPosition);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotation, lerpMultiplier * Time.deltaTime);
         isReturning = true;
@@ -146,47 +156,60 @@ public class CameraBoom : MonoBehaviour
     }
     void OverrideCameraBoomLength(float length)
     {
-        if (length < targetBoomLength)
+         if (length < targetBoomLength)
         {
             cameraBoomLength = Mathf.Lerp(cameraBoomLength, length, lerpMultiplier * Time.deltaTime * boomSmoothening);
             isOverridingLength = true;
         }
+        Debug.Log("Length: " + length);
     }
     void ReturnToTargetBoomLength()
     {
-        cameraBoomLength = Mathf.Lerp(cameraBoomLength, targetBoomLength, lerpMultiplier * Time.deltaTime * boomSmoothening);
-        if (cameraBoomLength == targetBoomLength)
+        if (isOverridingLength)
+        {
+            cameraBoomLength = Mathf.Lerp(cameraBoomLength, targetBoomLength, lerpMultiplier * Time.deltaTime * boomSmoothening);
+        }
+
+        if (Mathf.Approximately(cameraBoomLength, targetBoomLength))
         {
             isOverridingLength = false;
         }
     }
     float GetScrollInput()
     {
-        return Input.GetAxis("Mouse ScrollWheel");
+        return Input.GetAxis(scrollWheel) * Mathf.Abs(Input.GetAxis(scrollWheel));
     }
+    
     void LerpMouseAxisBackToZero()
     {
-        mouseAxisX = Mathf.Lerp(mouseAxisX, 0, Time.deltaTime * lerpMultiplier * cameraReturnSmoothening);
-        mouseAxisY = Mathf.Lerp(mouseAxisY, 0, Time.deltaTime * lerpMultiplier * cameraReturnSmoothening);
+        //Regularcam axis
+        if (Input.GetAxis(mouseAxisX) == 0 || Input.GetAxis(mouseAxisY) == 0)
+        {
+        mouseAxisXValue = Mathf.Lerp(mouseAxisXValue, 0, Time.deltaTime * lerpMultiplier * cameraReturnSmoothening);
+        mouseAxisYValue = Mathf.Lerp(mouseAxisYValue, 0, Time.deltaTime * lerpMultiplier * cameraReturnSmoothening);
+        }
+        //Freecam axis
+        freeCameraAxisXValue = Mathf.Lerp(freeCameraAxisXValue, 0, Time.deltaTime * lerpMultiplier * cameraReturnSmoothening);
+        freeCameraAxisYValue = Mathf.Lerp(freeCameraAxisYValue, 0, Time.deltaTime * lerpMultiplier * cameraReturnSmoothening);
     }
     bool GetRightMouseInput()
     {
         return Input.GetMouseButton(1);
     }
-    bool LinecastToTarget()
-    {
-        int playerLayer = 1 << 8;
-        playerLayer = ~playerLayer;
-        Debug.DrawLine(camera.transform.position - camera.transform.forward * 5f, endPosition, Color.red);
 
-        return Physics.Linecast(camera.transform.position - camera.transform.forward * 5f, endPosition, playerLayer);
-    }
-    Vector3 RaycastFromTargetToCamera()
+    bool LinecastFromTargetToCamera(ref Vector3 hitPoint)
     {
-
         RaycastHit hitInfo;
-        Physics.Linecast(endPosition, camera.transform.position - camera.transform.forward * 5f, out hitInfo);
-        Debug.DrawLine(endPosition, camera.transform.position - camera.transform.forward);
-        return hitInfo.point;
+        bool hasHitObject = Physics.Linecast(endPosition, camera.transform.position - camera.transform.forward * 5f, out hitInfo);
+        Debug.DrawLine(endPosition, camera.transform.position - camera.transform.forward * 5f);
+        if (hitInfo.collider != null)
+        {
+            Debug.Log(hitInfo.transform.gameObject);
+        }
+        if (hasHitObject)
+        {
+            hitPoint = hitInfo.point;
+        }
+            return hasHitObject;
     }
 }
