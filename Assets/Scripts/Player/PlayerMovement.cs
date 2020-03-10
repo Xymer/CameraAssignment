@@ -28,7 +28,15 @@ public class PlayerMovement : MonoBehaviour
         {
             transform.Translate(movementVector.normalized * Time.deltaTime * moveSpeed);
         }
-        GetMouseMovement();
+        if (GetMouseMovement())
+        {
+            RotatePlayer();
+        }
+        else
+        {
+            playerYRotation = 0f + transform.rotation.eulerAngles.y;
+        }
+        
 
     }
     bool GetInput()
@@ -50,12 +58,20 @@ public class PlayerMovement : MonoBehaviour
     {
         
         if (Input.GetAxis("Mouse X") != 0 && !Input.GetMouseButton(1))
-        {
-            playerYRotation += Input.GetAxis("Mouse X") * turnRate;
-            transform.rotation = Quaternion.Euler(0, playerYRotation , 0);
+        {        
             return true;
         }
-        playerYRotation = 0f + transform.rotation.eulerAngles.y;
         return false;
+    }
+
+    void RotatePlayer()
+    {
+        playerYRotation += Input.GetAxis("Mouse X") * turnRate;
+        transform.rotation = Quaternion.Euler(0, playerYRotation, 0);
+
+    }
+    void UNUSED()
+    {
+        playerYRotation = 0f + transform.rotation.eulerAngles.y;
     }
 }

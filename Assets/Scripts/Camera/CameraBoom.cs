@@ -13,7 +13,7 @@ public class CameraBoom : MonoBehaviour
     float cameraBoomLength = 10.0f;
     [SerializeField] float maxCameraBoomLength = 10.0f;
     [SerializeField] float minCameraBoomLength = 2.0f;
-    [SerializeField] float boomSmoothening = 0.75f;
+    [SerializeField, Range(0f,1f)] float boomSmoothening = 0.75f;
 
     [SerializeField] float lerpMultiplier = 50.0f;
     [SerializeField, Range(0f,1f)] float cameraReturnSmoothening = 0.05f;
@@ -61,8 +61,7 @@ public class CameraBoom : MonoBehaviour
 
     // Update is called once per frame
     void LateUpdate()
-    {
-        Debug.Log("Target length: " + targetBoomLength);
+    {     
         if (LinecastFromTargetToCamera(ref linetraceHitpoint))
         {
         OverrideCameraBoomLength(Vector3.Distance(endPosition, linetraceHitpoint));
@@ -115,7 +114,7 @@ public class CameraBoom : MonoBehaviour
     }
     void RotateCameraBoom(GameObject target)
     {
-        if (isReturning && Vector3.Distance(transform.rotation.eulerAngles, target.transform.rotation.eulerAngles) < distanceToLockCamera) // Decides if it should lock the camera behind the camera target
+        if (Vector3.Distance(transform.rotation.eulerAngles, target.transform.rotation.eulerAngles) < distanceToLockCamera) // Decides if it should lock the camera behind the camera target
         {
             isReturning = false;
         }
@@ -123,12 +122,12 @@ public class CameraBoom : MonoBehaviour
         {
             mouseAxisYValue -= Input.GetAxis(mouseAxisY);
             mouseAxisXValue += Input.GetAxis(mouseAxisX);
-            Quaternion rotation =Quaternion.Euler(Mathf.Clamp(mouseAxisYValue + target.transform.rotation.eulerAngles.x,mouseAxisYMin,mouseAxisYMax), target.transform.rotation.eulerAngles.y, 0f);         
+            mouseAxisYValue = Mathf.Clamp(mouseAxisYValue, mouseAxisYMin, mouseAxisYMax);
+            Quaternion rotation =Quaternion.Euler(Mathf.Clamp(mouseAxisYValue + target.transform.rotation.eulerAngles.x,mouseAxisYMin,mouseAxisYMax), target.transform.rotation.eulerAngles.y + -Mathf.Clamp(mouseAxisXValue,-10f,10f), 0f);         
             transform.rotation = rotation;      
         }
         else if (isReturning)
-        {
-            
+        {            
             transform.rotation = Quaternion.Lerp(transform.rotation, target.transform.rotation, Time.deltaTime * lerpMultiplier * cameraReturnSmoothening);
         }
         camera.transform.LookAt(endPosition);
@@ -141,7 +140,7 @@ public class CameraBoom : MonoBehaviour
         freeCameraAxisYValue -= Input.GetAxis(mouseAxisY) * mouseMultiplier;
         freeCameraAxisYValue = Mathf.Clamp(freeCameraAxisYValue, mouseAxisYMin, mouseAxisYMax);
 
-        Quaternion rotation = Quaternion.Euler(mouseMovement.y + target.transform.rotation.eulerAngles.x, mouseMovement.x + target.transform.rotation.eulerAngles.y, 0.0f);
+        Quaternion rotation = Quaternion.Euler(mouseMovement.y + target.transform.rotation.eulerAngles.x,mouseMovement.x + target.transform.rotation.eulerAngles.y, 0.0f);
         camera.transform.LookAt(endPosition);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotation, lerpMultiplier * Time.deltaTime);
         isReturning = true;
@@ -159,8 +158,7 @@ public class CameraBoom : MonoBehaviour
         {
             cameraBoomLength = Mathf.Lerp(cameraBoomLength, length, lerpMultiplier * Time.deltaTime * boomSmoothening);
             isOverridingLength = true;
-        }
-        Debug.Log("Length: " + length);
+        }       
     }
     void ReturnToTargetBoomLength()
     {
@@ -185,7 +183,7 @@ public class CameraBoom : MonoBehaviour
         if (Input.GetAxis(mouseAxisX) == 0 || Input.GetAxis(mouseAxisY) == 0)
         {
         mouseAxisXValue = Mathf.Lerp(mouseAxisXValue, 0, Time.deltaTime * lerpMultiplier * cameraReturnSmoothening);
-        mouseAxisYValue = Mathf.Lerp(mouseAxisYValue, 0, Time.deltaTime * lerpMultiplier * cameraReturnSmoothening);
+        //mouseAxisYValue = Mathf.Lerp(mouseAxisYValue, 0, Time.deltaTime * lerpMultiplier * cameraReturnSmoothening);
         }
         //Freecam axis
         freeCameraAxisXValue = Mathf.Lerp(freeCameraAxisXValue, 0, Time.deltaTime * lerpMultiplier * cameraReturnSmoothening);
@@ -199,12 +197,9 @@ public class CameraBoom : MonoBehaviour
     bool LinecastFromTargetToCamera(ref Vector3 hitPoint)
     {
         RaycastHit hitInfo;
-        bool hasHitObject = Physics.Linecast(endPosition, camera.transform.position - camera.transform.forward * 5f, out hitInfo);
-        Debug.DrawLine(endPosition, camera.transform.position - camera.transform.forward * 5f);
-        if (hitInfo.collider != null)
-        {
-            Debug.Log(hitInfo.transform.gameObject);
-        }
+        bool hasHitObject = Physics.Linecast(endPosition, camera.transform.position - camera.transform.forward * 2f, out hitInfo);
+        Debug.DrawLine(endPosition, camera.transform.position - camera.transform.forward * 2f);
+        
         if (hasHitObject)
         {
             hitPoint = hitInfo.point;
