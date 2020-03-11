@@ -72,18 +72,15 @@ public class CameraBoom : MonoBehaviour
         }
 
         UpdateMouseValues();
-
+        UpdateEndPosition(cameraTarget);
         if (!GetRightMouseInput())
-        {
-            UpdateEndPosition(cameraTarget);
+        {          
             SetCameraPosition(cameraTarget);
             RotateCameraBoom(cameraTarget);
             LerpMouseAxisBackToZero();
         }
-
-        if (GetRightMouseInput())
-        { 
-            UpdateEndPosition(cameraTarget);
+        else
+        {           
             SetFreeCameraPosition(cameraTarget);
         }      
     }
@@ -109,7 +106,7 @@ public class CameraBoom : MonoBehaviour
     void SetCameraPosition(GameObject target)
     {
         transform.position = target.transform.position;
-        camera.transform.position = Vector3.Lerp(camera.transform.position, endPosition - transform.forward * cameraBoomLength + cameraOffset, Time.fixedDeltaTime * lerpMultiplier);
+        camera.transform.position = Vector3.Lerp(camera.transform.position, endPosition - transform.forward * cameraBoomLength + cameraOffset, Time.deltaTime * lerpMultiplier);
     }
     void RotateCameraBoom(GameObject target)
     {
